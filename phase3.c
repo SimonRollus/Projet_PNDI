@@ -14,8 +14,6 @@
 #define TEST_FILE "dataset/testSet.csv"
 #define MODEL_FILE "dataset/model.csv"
 
-
-
 double euclideanDistance(double *values, double *model_values);
 int getMinIndex(double *distances);
 void parseLineToValues(char *line, char *delimiter, double *values);
@@ -23,7 +21,6 @@ double getAccuracy(int *realClasses, int *estimateClasses, int nbTests);
 void displayEstimateClasses(int *estimateClasses, int nbTests);
 void displayRealClasses(int *realClasses, int nbTests);
 void displayDistances(double *distances);
-
 
 int main() {
     FILE *fpTest = NULL;
@@ -119,7 +116,7 @@ double euclideanDistance(double *values, double *model_values) {
     }
 
     distance = sqrt(distance);
-    
+
     return distance;
 }
 
