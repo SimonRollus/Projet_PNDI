@@ -9,98 +9,78 @@
 #define TRAINING_FILE "dataset/trainSet.csv"
 #define PATTERN_FILE "dataset/pattern.csv"
 
-typedef struct row Row;
-struct row {
-  int row_count;
-  double vAccs[NB_VACCS];
+typedef struct column Column;
+struct column {
+  double sum;
+  int total_elements;  
 };
 
-/*
-    move_id :
-    1 : downstairs
-    2 : upstairs
-    3 : jogging
-    4 : sit down
-    5 : stand up
-    6 : walking
-
-*/
+void parseLineToColumns(char *line, char *delimiter, Column data[NB_MOVEMENTS][NB_VACCS]);
+void writePattern(FILE* fpPattern, Column data[NB_MOVEMENTS][NB_VACCS]);
 
 int main() {
-  FILE *fpTrainSet = NULL;
+  FILE *fpTrain = NULL;
   FILE *fpPattern = NULL;
+
   char line[T_LINE];
   char *delimiter = ",";
   char *token;
+
   int move_id;
-  Row matrix[NB_MOVEMENTS];
-
-  printf("Opening file %s\n", TRAINING_FILE);
-  fpTrainSet = fopen(TRAINING_FILE, "r");
-
-  if (fpTrainSet == NULL) {
-    printf("Failed to open file %s\n", TRAINING_FILE);
-    exit(EXIT_FAILURE);
-  }
-
-  //Init matrix
-  for (int i = 0; i < NB_MOVEMENTS; i++) {
-    for (int j = 0; j < NB_VACCS; j++) {
-      matrix[i].vAccs[j] = 0; 
-    }
-  }
-
-  // To remove the "useless" header
-  fgets(line, T_LINE, fpTrainSet);
+  double temp;
   
-  while (fgets(line, T_LINE, fpTrainSet) != NULL) {
+  Column data[NB_MOVEMENTS][NB_VACCS];
 
-    token = strtok(line, delimiter);
-    
-    // Parse the move_id value
-    move_id = atoi(token);
-    move_id--;
-
-    matrix[move_id].row_count += 1;
-
-    // Parse the vAccs values
-    for (int i = 0; i < NB_VACCS; i++) {
-
-      token = strtok(NULL, delimiter);
-      if (token == NULL) {
-        break;
-      }
-
-      matrix[move_id].vAccs[i] += atof(token);
-    }
-  }
-
-  fclose(fpTrainSet);
-  printf("Finished reading \n");
-
-  printf("Starting writing \n");
-
-  printf("Opening file %s\n", PATTERN_FILE);
+  fpTrain = fopen(TRAINING_FILE, "r");
   fpPattern = fopen(PATTERN_FILE, "w");
 
-  if (fpPattern == NULL) {
+  if (fpTrain == NULL || fpPattern == NULL) {
+    printf("Failed to open file %s\n", TRAINING_FILE);
     printf("Failed to open file %s\n", PATTERN_FILE);
     exit(EXIT_FAILURE);
   }
 
-  double avg;
+  fgets(line, T_LINE, fpTrain);
+  while (fgets(line, T_LINE, fpTrain) != NULL)
+    parseLineToColumns(line, delimiter, data);
 
-  for (int i = 0; i < NB_MOVEMENTS; i++) {
-    fprintf(fpPattern, "%d,", i+1);
-    for (int j = 0; j < NB_VACCS; j++) {
-      avg = matrix[i].vAccs[j] / matrix[i].row_count;
-      fprintf(fpPattern, "%f", avg);
-      if (j < 999)
-        fprintf(fpPattern, ",");
-    }
-    fprintf(fpPattern, "\n");
-  }
+    
+  writePattern(fpPattern, data);
 
+  fclose(fpTrain);
   fclose(fpPattern);
   exit(EXIT_SUCCESS);
 }
+
+void parseLineToColumns(char *line, char *delimiter, Column data[NB_MOVEMENTS][NB_VACCS]) {
+  char *token;
+  int move_id;
+  double temp;
+
+  token = strtok(line, delimiter);
+
+  move_id = atoi(token);
+
+  for (int i = 0; i < NB_VACCS; i++) {
+    token = strtok(NULL, delimiter);
+    temp = atof(token);
+    data[move_id-1][i].sum += temp;
+    data[move_id-1][i].total_elements += temp > 0 ? 1 : 0;
+  }
+}
+
+void writePattern(FILE* fpPattern, Column data[NB_MOVEMENTS][NB_VACCS]) {
+  double avg;
+
+  fprintf(fpPattern, "Move,acceleration vector(1000)\n");
+  for (int i = 0; i < NB_MOVEMENTS; i++) {
+    fprintf(fpPattern, "%d,", i+1);
+    for (int j = 0; j < NB_VACCS; j++) {
+      avg = data[i][j].sum / data[i][j].total_elements;
+      fprintf(fpPattern, "%lf,", avg);
+    }
+    fprintf(fpPattern, "\n");
+  }
+}
+
+// gcc phase2.c -o phase2 && ./phase2
