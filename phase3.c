@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "ClassificationPerformance/Header.h"
 
 #define T_LINE 15000
 #define NB_VACCS 1000
@@ -14,22 +15,18 @@
 #define TEST_FILE "dataset/testSet.csv"
 #define MODEL_FILE "dataset/model.csv"
 
-double euclideanDistance(double *values, double *model_values);
-int getMinIndex(double *distances);
-void parseLineToValues(char *line, char *delimiter, double *values);
-double getAccuracy(int *realClasses, int *estimateClasses, int nbTests);
-void displayEstimateClasses(int *estimateClasses, int nbTests);
-void displayRealClasses(int *realClasses, int nbTests);
-void displayDistances(double *distances);
+double euclideanDistance(double* values, double* model_values);
+int getMinDistance(double* distances);
+void parseLineToValues(char* line, char* delimiter, double* values);
 
 int main() {
-    FILE *fpTest = NULL;
-    FILE *fpModel = NULL;
+    FILE* fpTest = NULL;
+    FILE* fpModel = NULL;
 
-    char *delimiter = ",";
+    char* delimiter = ",";
     char line[T_LINE];
-    char *token;
-    
+    char* token;
+
     double testValues[NB_VACCS];
     double modelValues[NB_VACCS];
 
@@ -40,19 +37,19 @@ int main() {
     int realClasses[100];
     int estimateClasses[100];
     int nbTests = 0;
-    
+
     fpTest = fopen(TEST_FILE, "r");
     fpModel = fopen(MODEL_FILE, "r");
-    
+
     if (fpTest == NULL || fpModel == NULL) {
         printf("Failed to open file %s\n", TEST_FILE);
         printf("Failed to open file %s\n", MODEL_FILE);
         exit(EXIT_FAILURE);
     }
-    
+
     fgets(line, T_LINE, fpTest);
     while (fgets(line, T_LINE, fpTest) != NULL) {
-    
+
         token = strtok(line, delimiter);
         moveId = atoi(token);
 
@@ -68,47 +65,27 @@ int main() {
 
             parseLineToValues(line, delimiter, modelValues);
 
-            distances[moveId-1] = euclideanDistance(testValues, modelValues);
+            distances[moveId - 1] = euclideanDistance(testValues, modelValues);
         }
 
-        estimateClasses[nbTests] = getMinIndex(distances)+1;
-    
+        estimateClasses[nbTests] = getMinDistance(distances) + 1;
+
         nbTests++;
         rewind(fpModel);
     }
 
     
-    for (int i = 0; i < nbTests; i++) {
-        printf("%d %d\n", estimateClasses[i], realClasses[i]);
-    }
-
-    printf("Accuracy : %f for %d tests\n", getAccuracy(realClasses, estimateClasses, nbTests), nbTests);
- 
     fclose(fpTest);
     fclose(fpModel);
+
+    displayResultsByClass(realClasses, estimateClasses, nbTests);
+    displayAccuracy(realClasses, estimateClasses, nbTests);
+    displayConfusionMatrix(realClasses, estimateClasses, nbTests);
 
     return 0;
 }
 
-void displayEstimateClasses(int *estimateClasses, int nbTests) {
-    for (int i = 0; i < nbTests; i++) {
-        printf("%d\n", estimateClasses[i]);
-    }
-}
-
-void displayRealClasses(int *realClasses, int nbTests) {
-    for (int i = 0; i < nbTests; i++) {
-        printf("%d\n", realClasses[i]);
-    }
-}
-
-void displayDistances(double *distances) {
-    for (int i = 0; i < NB_MOVEMENTS; i++) {
-        printf("%lf\n", distances[i]);
-    }
-}
-
-double euclideanDistance(double *values, double *model_values) {
+double euclideanDistance(double* values, double* model_values) {
     double distance = 0;
 
     for (int i = 0; i < NB_VACCS; i++) {
@@ -120,7 +97,7 @@ double euclideanDistance(double *values, double *model_values) {
     return distance;
 }
 
-int getMinIndex(double *distances) {
+int getMinDistance(double* distances) {
     int minIndex = 0;
 
     for (int i = 0; i < NB_MOVEMENTS; i++) {
@@ -132,20 +109,8 @@ int getMinIndex(double *distances) {
     return minIndex;
 }
 
-double getAccuracy(int *realClasses, int *estimateClasses, int nbTests) {
-    int nbCorrect = 0;
-
-    for (int i = 0; i < nbTests; i++) {
-        if (realClasses[i] == estimateClasses[i]) {
-            nbCorrect++;
-        }
-    }
-
-    return (double) nbCorrect / nbTests;
-}
-
-void parseLineToValues(char *line, char *delimiter, double *values) {
-    char *token;
+void parseLineToValues(char* line, char* delimiter, double* values) {
+    char* token;
 
     for (int i = 0; i < NB_VACCS; i++) {
         token = strtok(NULL, delimiter);

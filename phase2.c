@@ -82,5 +82,3 @@ void writePattern(FILE* fpPattern, Column data[NB_MOVEMENTS][NB_VACCS]) {
     fprintf(fpPattern, "\n");
   }
 }
-
-// gcc phase2.c -o phase2 && ./phase2
