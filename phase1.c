@@ -66,7 +66,7 @@ int main() {
             nbOutliers[1] = 0;
             nbOutliers[2] = 0;
 
-            missingTimecode = false;
+            missingTimeCode = false;
 
             fgets(line, T_LINE, fpCurrentFile);
 
