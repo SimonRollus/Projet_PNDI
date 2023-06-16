@@ -26,7 +26,7 @@ int main() {
 
     Outlier outliers[3][NB_OUTLIERS];
     int nbOutliers[3];
-    bool missingTimecode;
+    bool missingTimeCode;
 
     char *token;
     char *delimiter = ",";
