@@ -120,7 +120,7 @@ int main() {
             fprintf(fpValidation, "\n");
             fclose(fpCurrentFile);
         }
-        break;
+       
     }
 }
 
