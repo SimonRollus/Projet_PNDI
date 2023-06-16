@@ -77,7 +77,7 @@ int main() {
                 token = strtok(line, delimiter);
                 
                 if (atoi(token) != nbLines-1) {
-                    missingTimecode = true;
+                    missingTimeCode = true;
                     nb_skips = 8;
                 }
 
@@ -109,7 +109,7 @@ int main() {
                 }
             }
 
-            fprintf(fpValidation, "%ssub_%d.csv,%d,%d,x,%d,y,%d,z,%d", paths[i], j + 1, nbLines, missingTimecode, nbOutliers[0], nbOutliers[1], nbOutliers[2]);
+            fprintf(fpValidation, "%ssub_%d.csv,%d,%d,x,%d,y,%d,z,%d", paths[i], j + 1, nbLines, missingTimeCode, nbOutliers[0], nbOutliers[1], nbOutliers[2]);
 
             for (int k = 0; k < 3; k++) {
                 char axis[3] = { 'x', 'y', 'z' };
