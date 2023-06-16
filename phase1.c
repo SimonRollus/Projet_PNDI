@@ -7,15 +7,26 @@
 #define DATASET_FOLDER "dataset/origin"
 #define VALIDATION_FILE "dataset/validation.csv"
 #define LGPATH 10
+#define NB_OUTLIERS 500
 #define T_LINE 15000
+
+typedef struct outlier Outlier;
+struct outlier {
+    int timecode;
+    double value;
+};
 
 bool isNormalDistributed(double value, double mean, double standardDeviation);
 
 int main() {
     char paths[15][LGPATH] = { "dws_1/","dws_2/","dws_11/","jog_9/","jog_16/","sit_5/","sit_13/", "std_6/","std_14/","ups_3/","ups_4/","ups_12/","wlk_7/","wlk_8/","wlk_15/" };
-    int nbLines[15][24];
+    char line[T_LINE];
 
+    int nbLines;
+
+    Outlier outliers[3][NB_OUTLIERS];
     int nbOutliers[3];
+    bool missingTimecode;
 
     char *token;
     char *delimiter = ",";
@@ -49,20 +60,26 @@ int main() {
                 exit(EXIT_FAILURE);
             }
 
-            nbLines[i][j] = 0;
+            nbLines = 0;
 
             nbOutliers[0] = 0;
             nbOutliers[1] = 0;
             nbOutliers[2] = 0;
 
-            char line[T_LINE];
+            missingTimecode = false;
 
             fgets(line, T_LINE, fpCurrentFile);
 
             while (fgets(line, T_LINE, fpCurrentFile) != NULL) {
-                nbLines[i][j]++;
+                nbLines++;
+                int nb_skips = 9;
                 double values[3];
                 token = strtok(line, delimiter);
+                
+                if (atoi(token) != nbLines-1) {
+                    missingTimecode = true;
+                    nb_skips = 8;
+                }
 
                 for (int skip = 0; skip < 9; skip++) {
                     token = strtok(NULL, delimiter);
@@ -74,30 +91,45 @@ int main() {
                 }
 
                 if (!isNormalDistributed(values[0], meanX, standardDeviationX)) {
+                    outliers[0][nbOutliers[0]].timecode = nbLines-1;
+                    outliers[0][nbOutliers[0]].value = values[0];
                     nbOutliers[0]++;
-                    fprintf(fpValidation, "%ssub_%d.csv,x,%d,%f\n", paths[i], j + 1, nbLines[i][j]-1, values[0]);
                 }  
 
                 if (!isNormalDistributed(values[1], meanY, standardDeviationY)) {
+                    outliers[1][nbOutliers[1]].timecode = nbLines-1;
+                    outliers[1][nbOutliers[1]].value = values[1];
                     nbOutliers[1]++;
-                    fprintf(fpValidation, "%ssub_%d.csv,y,%d,%f\n", paths[i], j + 1, nbLines[i][j]-1, values[1]);
                 }
 
                 if (!isNormalDistributed(values[2], meanZ, standardDeviationZ)) {
+                    outliers[2][nbOutliers[2]].timecode = nbLines-1;
+                    outliers[2][nbOutliers[2]].value = values[2];
                     nbOutliers[2]++;
-                    fprintf(fpValidation, "%ssub_%d.csv,z,%d,%f\n", paths[i], j + 1, nbLines[i][j]-1, values[2]);
                 }
             }
 
-            fprintf(fpValidation, "%ssub_%d.csv,%d,x,%d,y,%d,z,%d\n", paths[i], j + 1, nbLines[i][j], nbOutliers[0], nbOutliers[1], nbOutliers[2]);
+            fprintf(fpValidation, "%ssub_%d.csv,%d,%d,x,%d,y,%d,z,%d", paths[i], j + 1, nbLines, missingTimecode, nbOutliers[0], nbOutliers[1], nbOutliers[2]);
+
+            for (int k = 0; k < 3; k++) {
+                char axis[3] = { 'x', 'y', 'z' };
+                for (int l = 0; l < nbOutliers[k]; l++) {
+                    fprintf(fpValidation, ",%c,%d,%f", axis[k], outliers[k][l].timecode, outliers[k][l].value);
+                }
+            }
+            fprintf(fpValidation, "\n");
             fclose(fpCurrentFile);
         }
+        break;
     }
 }
 
 bool isNormalDistributed(double value, double mean, double standardDeviation) {
     return value >= mean - 3 * standardDeviation && value <= mean + 3 * standardDeviation;
 }
+
+
+//how to compile
 
 
 
