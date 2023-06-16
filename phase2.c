@@ -26,9 +26,6 @@ int main() {
   char *delimiter = ",";
   char *token;
 
-  int move_id;
-  double temp;
-  
   Column data[NB_MOVEMENTS][NB_VACCS];
 
   fpTrain = fopen(TRAINING_FILE, "r");
